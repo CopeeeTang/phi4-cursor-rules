@@ -1,0 +1,108 @@
+# 应用架构规则
+
+本规则描述项目的整体应用架构和组件交互方式。
+
+## 系统架构
+
+项目采用前后端分离的架构，主要分为以下组件：
+
+```mermaid
+graph TB
+    User((用户))
+
+    subgraph "前端容器"
+        direction TB
+        WebUI["Web界面<br>(HTML/CSS/JS)"]
+
+        subgraph "前端组件"
+            SocketClient["Socket客户端<br>(Socket.io)"]
+            DeviceManager["设备管理器<br>(JavaScript)"]
+            SettingsManager["设置管理器<br>(JavaScript)"]
+            APIClient["API客户端<br>(JavaScript)"]
+        end
+    end
+
+    subgraph "后端容器"
+        direction TB
+        FlaskServer["Flask服务器<br>(Python/Flask)"]
+        SocketServer["WebSocket服务器<br>(Flask-SocketIO)"]
+
+        subgraph "核心组件"
+            IntentProcessor["意图处理器<br>(Phi4)"]
+            ToolExecutor["工具执行器<br>(Python)"]
+            MCPTools["MCP工具<br>(Python)"]
+            StateManager["状态管理器<br>(Python)"]
+        end
+
+        subgraph "工具组件"
+            DeviceController["设备控制器<br>(Python)"]
+            SettingsController["设置控制器<br>(Python)"]
+            UIAnalyzer["UI分析器<br>(Python)"]
+            GestureProcessor["手势处理器<br>(Python)"]
+        end
+    end
+
+    subgraph "外部系统"
+        Phi4Model["Phi4模型<br>(ML模型)"]
+        ImageProcessor["图像处理器<br>(PIL)"]
+    end
+
+    User -->|"与界面交互"| WebUI
+    WebUI -->|"API调用"| APIClient
+    WebUI -->|"实时更新"| SocketClient
+
+    APIClient -->|"HTTP请求"| FlaskServer
+    SocketClient -->|"WebSocket"| SocketServer
+
+    FlaskServer -->|"处理请求"| IntentProcessor
+    FlaskServer -->|"执行工具"| ToolExecutor
+    SocketServer -->|"更新状态"| StateManager
+
+    ToolExecutor -->|"控制"| DeviceController
+    ToolExecutor -->|"管理"| SettingsController
+    IntentProcessor -->|"分析"| UIAnalyzer
+    IntentProcessor -->|"处理"| GestureProcessor
+
+    IntentProcessor -->|"使用"| Phi4Model
+    UIAnalyzer -->|"使用"| ImageProcessor
+
+    DeviceController -->|"更新"| StateManager
+    SettingsController -->|"更新"| StateManager
+    StateManager -->|"广播"| SocketServer
+
+    MCPTools -->|"提供"| ToolExecutor
+    ToolExecutor -->|"使用"| MCPTools
+```
+
+## 关键文件和功能
+
+### 前端文件
+
+- [xeo-app/index.html](mdc:xeo-app/index.html) - 主入口点，定义整体UI结构
+- [xeo-app/js](mdc:xeo-app/js) - 包含前端JavaScript实现
+  - API客户端处理与后端的HTTP通信
+  - Socket客户端处理实时更新
+  - 设备和设置管理组件实现用户交互
+
+### 后端文件
+
+- [xeo-app/backend/app.py](mdc:xeo-app/backend/app.py) - 主应用程序入口点，定义路由和WebSocket处理
+- [xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py) - Phi4意图处理模块
+- [xeo-app/backend/mcp_tools.py](mdc:xeo-app/backend/mcp_tools.py) - 定义系统可用的工具和操作
+- [xeo-app/backend/mcp_executor.py](mdc:xeo-app/backend/mcp_executor.py) - 工具执行逻辑
+
+### 工作流处理
+
+- [phi4_workflow/phi4_workflow.py](mdc:phi4_workflow/phi4_workflow.py) - 多模态推理工作流
+- [phi4_workflow/llm.py](mdc:phi4_workflow/llm.py) - LLM推理工作流
+- [phi4_workflow/phi4_workflow_tools.py](mdc:phi4_workflow/phi4_workflow_tools.py) - 工具集成
+
+## 数据流
+
+1. 用户通过Web界面与系统交互（眼动、手势或直接操作）
+2. 前端捕获用户输入并通过API或WebSocket发送到后端
+3. 后端接收请求，处理输入数据，并调用Phi4意图处理模块
+4. 意图处理模块分析输入并推断用户意图
+5. 工具执行器根据推断的意图执行相应操作
+6. 状态更新通过WebSocket实时传回前端
+7. 前端根据状态更新刷新界面
