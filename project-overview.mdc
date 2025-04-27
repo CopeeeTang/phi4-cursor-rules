@@ -1,0 +1,29 @@
+# Phi4项目概述
+
+本项目围绕Microsoft Phi-4多模态大模型构建，专注于结合眼动追踪和手势识别，打造智能交互系统。
+
+## 核心组件
+
+### 1. 多模态处理
+
+- [phi4_workflow/llm.py](mdc:phi4_workflow/llm.py) - 负责多模态LLM推理工作流，处理图像与文本输入
+- [phi4_workflow/phi4_workflow.py](mdc:phi4_workflow/phi4_workflow.py) - 提供完整的多模态推理流程，包括眼动数据处理和手势分析
+
+### 2. 前端系统
+
+- [xeo-app/index.html](mdc:xeo-app/index.html) - 主前端入口点，展示UI结构和客户端交互界面
+- [xeo-app/js](mdc:xeo-app/js) - 前端JavaScript功能实现
+
+### 3. 后端服务
+
+- [xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py) - 使用Phi4模型处理自然语言和意图识别
+- [xeo-app/backend/app.py](mdc:xeo-app/backend/app.py) - 主应用程序入口点，定义核心路由与WebSocket处理程序
+
+### 4. 工具处理
+
+- [tool_call.py](mdc:tool_call.py) - 支持工具调用的核心功能
+- [phi4_workflow/phi4_workflow_tools.py](mdc:phi4_workflow/phi4_workflow_tools.py) - 与Phi4工作流集成的工具函数
+
+## 应用架构
+
+项目采用前后端分离架构，后端使用Flask和Flask-SocketIO提供REST API和实时WebSocket通信，前端使用HTML/CSS/JS实现界面。系统集成了眼动追踪、手势识别和Phi4模型，实现多模态交互，让用户可以通过眼动、手势和语音控制界面。
