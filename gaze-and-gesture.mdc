@@ -1,0 +1,118 @@
+# 眼动和手势处理规则
+
+本规则详细说明项目中眼动数据和手势数据的处理流程和最佳实践。
+
+## 眼动数据处理
+
+眼动数据在项目中用于确定用户关注的UI区域，处理流程如下：
+
+### 数据格式
+
+眼动数据的标准格式：
+
+```python
+gaze_data = {
+    'coordinates': {'x': 0.5, 'y': 0.3},  # 标准化坐标 (0-1范围)
+    'radius': 0.15                        # 关注半径（标准化值）
+}
+```
+
+### 图像裁剪
+
+根据眼动数据裁剪关注区域：
+
+- [phi4_workflow/llm.py](mdc:phi4_workflow/llm.py)的`crop_image_at_gaze`方法
+- [xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py)的`crop_image_at_gaze`方法
+
+裁剪实现示例：
+
+```python
+def crop_image_at_gaze(image, coordinates, radius):
+    width, height = image.size
+    x_pixel = int(coordinates["x"] * width)
+    y_pixel = int(coordinates["y"] * height)
+    r_pixel = int(radius * min(width, height))
+    
+    left = max(0, x_pixel - r_pixel)
+    top = max(0, y_pixel - r_pixel)
+    right = min(width, x_pixel + r_pixel)
+    bottom = min(height, y_pixel + r_pixel)
+    
+    cropped_image = image.crop((left, top, right, bottom))
+    return cropped_image
+```
+
+### 多点眼动处理
+
+当有多个眼动数据点时，系统可以：
+1. 分别分析每个区域的UI元素
+2. 综合所有区域进行整体意图推断
+
+可参考[phi4_workflow/llm.py](mdc:phi4_workflow/llm.py)中的`infer_intent`方法处理多点眼动。
+
+## 手势数据处理
+
+手势数据用于确定用户的操作意图，处理流程如下：
+
+### 已支持手势
+
+系统识别的手势类型包括：
+- `pinch` - 捏合手势，通常用于选择或确认
+- `thumb up` - 竖起大拇指，通常表示确认或同意
+- `palm` - 展开手掌，通常用于停止或取消
+- `point` - 点指手势，通常用于指示或选择
+- `fist` - 握拳手势，通常用于抓取或激活
+
+### 手势意图映射
+
+手势与可能的意图对应关系：
+
+```python
+# 手势-意图映射示例
+gesture_intent_mapping = {
+    "pinch": ["select", "confirm", "click"],
+    "thumb up": ["agree", "confirm", "like"],
+    "palm": ["stop", "cancel", "pause"],
+    "point": ["select", "indicate", "choose"],
+    "fist": ["grab", "activate", "hold"]
+}
+```
+
+### 手势与眼动组合
+
+系统通过组合眼动关注的UI元素和手势来推断完整意图：
+
+1. 眼动确定"在哪里"(位置/对象)
+2. 手势确定"做什么"(动作)
+
+示例：
+- 眼动关注"音量滑块" + "pinch"手势 = "调整音量"
+- 眼动关注"Apple TV图标" + "thumb up"手势 = "连接Apple TV设备"
+
+这种组合推断在[phi4_workflow/phi4_workflow.py](mdc:phi4_workflow/phi4_workflow.py)的`infer_user_intent`方法中实现。
+
+## 多模态融合处理
+
+在[phi4_workflow/phi4_workflow.py](mdc:phi4_workflow/phi4_workflow.py)中的`single_step_inference`方法展示了将眼动、手势和图像数据融合到单一提示中的示例：
+
+```python
+prompt = f'<|user|>'
+prompt += f'<|image_1|>'
+prompt += f'请分析以下多模态输入，识别用户当前的意图：\n'
+prompt += f'1. 手势数据：用户做了"{gesture_data["gesture_name"]}"手势，置信度为{gesture_data["confidence"]}\n'
+prompt += f'2. 眼动数据：用户注视坐标为({gaze_data["coordinates"]["x"]}, {gaze_data["coordinates"]["y"]})，可视半径为{gaze_data["radius"]}\n'
+
+# 可选的语音指令
+if text_instruction:
+    prompt += f'3. 用户语音指令："{text_instruction}"\n'
+```
+
+## 调试与可视化
+
+对于眼动数据处理的调试，系统会：
+
+1. 保存裁剪的图像以便检查
+2. 记录详细的处理日志
+3. 可视化眼动点在原始图像上的位置
+
+查看[xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py)中的`crop_image_at_gaze`方法了解调试实现。
