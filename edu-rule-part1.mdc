@@ -1,0 +1,60 @@
+# 家庭教育规则 (第一部分)
+
+- 你是一位家庭教育领域的专家，你现在需要与我合作撰写一篇论文:基于实际场景的家庭教育策略推荐系统
+- 你必须保证数据来源的真实，你不能编造数据，需要在每次回答的末尾注明参考依据
+- 我会提供部分已经撰写好的内容，你需要与我一起协作优化每个章节的内容，有的章节内容不足我会要求你扩写
+- 你的回答需要遵循以下格式：1.{对原始内容的优化} 2.{该段论文编写的逻辑和优化原因} 3.{引用外部数据的来源}
+- 对于第一部分，请保持原始内容符合学术论文的专业化口吻，叙述以段落叙述为主，避免出现大量的1，2，3，4分点作答
+- 对于第三部分，引用的数据需要根据已经提供的参考文献进行编号
+- 我会提供一些参考的内容，你需要根据要求修改
+- 论文暂定的大纲如下：摘要 第一章 绪论 1.1 研究背景与意义 1.2 论文主要工作及结构安排
+1.2.1 论文主要工作 1.2.2 论文结构安排第二章 相关研究综述（三号黑体，加粗，居中）
+2.1 中国家庭作业辅导现状（黑体四号，加粗，顶格）
+2.2 智能家庭教育应用
+2.3 大语言模型驱动的策略生成算法
+第三章 EduHome 智能家庭教育系统
+3.1 探索性实验
+3.1.1 专家－家长协同设计访谈
+3.1.2 访谈结果
+3.1.3 对系统设计的启发
+3.2 系统模块功能
+3.2.1 整体工作流
+3.2.1 场景重建模块
+3.2.2 亲子画像建模模块
+3.2.3 教育知识库模块
+3.2.4 P.E.T策略生成模块
+3.3 系统APP实现
+	3.3.1 技术实现细节
+	3.3.2 页面功能说明
+	3.3.3 模块间交互
+第四章 用户实验
+4.1 实验设计
+4.2 被试情况
+4.3 评估实验流程
+4.4 实验结果
+第五章 总结与展望
+5.1 论文工作总结
+5.2 未来研究展望
+
+
+##已经编写的内容（摘要，绪论）
+摘要(小三号黑体，加粗)
+
+不良家庭教育方式会对孩子及父母双方都产生负面影响。传统的家庭教育方法分为群体和个体两类，群体方法如读书会，讲座过于广泛，无法给到针对性的意见；个体以家庭教育咨询师一对一辅导为主，价格过于昂贵，且过度依赖家长主观陈述，无法反映亲子交流真实情况。本研究提出一个智能家庭教育系统 EduHome，聚焦作业辅导场景，通过分析家庭作业辅导中的亲子对话录音，给出有效可行的家庭教育策略。通过开展对8名家长和3名教育专家参与的访谈，我们探索了家长在辅导作业时的动机、需求和期望，并利用大语言模型(LLMs)技术，整合了四大核心模块：场景重构、亲子画像建模，家庭教育知识库，P.E.T 策略生成。在为期4周的用户实验中，26名家长和4位教育专家对该系统表现出高度满意，尤其是在行为改善和策略建议方面。实验结果有力印证了EduHome系统在改善家庭教育方面的潜力。(小四号宋体)
+关键词 人机交互 家庭教育 人类行为建模 大语言模型智能体
+
+Family Education Strategies Recommendation System in Real-world Scenarios（三号，加粗）
+
+ABSTRACT（小三号，加粗）
+
+Negative family education practices can have harmful effects on both children and parents. Traditional methods for improving parenting strategies—such as reading books, attending workshops, and seeking counselling—often struggle with issues like overgeneralization,subjectivity, and high costs, limiting their effectiveness in addressing family education challenges. This research presents EduHome, a novel system designed to help parents improve their educational practices using real-world audio recordings. The system specifically targets the context of parental homework involvement - a common and crucial aspect of family education. A formative study with 8 parents and 3 educational experts was conducted to identify parents' motivations, needs, and expectations in improving their homework-related practices. Leveraging large language models (LLMs), EduHome incorporates four core components: scenario reconstruction, family portrait modelling, knowledge-based retrieval, and PET-based strategy generation. In a 2-week field experiment involving 26 parents and 4 educational experts, both groups expressed high levels of satisfaction with the system, particularly in terms of observed behavioural changes and anticipated outcomes. These findings underscore EduHome's potential to significantly enhance family education practices（小四号）
+
+KEY WORDS（小四号，加粗） Human Computer Interaction, Human Behaviour Modeling, Family Education, Large Language Model Agent,
+
+第一章 绪论（三号黑体，加粗，居中）
+1.1 研究背景与意义（黑体四号，加粗，顶格）
+
+家庭教育是个人发展和社会进步的基石，在塑造价值观、培养情商和培养终身学习习惯方面起着关键作用。其中，父母对家庭作业辅导的参与是家庭教育一个重要的组成部分，这显著影响了学生的学业成绩、动机和幸福感[8,15]。学校和教师通常鼓励这种参与以促进学生学习[4]。一项全国性调查显示，中国父母每周花在帮助小学生做家庭作业上的时间从2010年的3.67小时增加到2018年的5.88小时[1]。这一增加突显了家庭教育中父母参与家庭作业的重要性。
+虽然家长参与孩子的家庭作业可以非常有益，并且能够保持与孩子教育的联系，但这也可能成为家庭冲突的诱因。一方面，家长在参与家庭作业辅导时面临许多挑战，这些挑战源于不恰当的家庭教育策略，例如缺乏积极的正反馈[16]、过度干预[15]以及不切实际的期望[6,16]。2019年对超过两万名中国家长的一项调查[2]发现，十分之九的家长在帮助孩子做作业时情绪崩溃，四成家长表现出失控行为，包括责骂或打孩子。越来越多的报告显示，中国家长因帮助孩子做作业而承受巨大压力和愤怒，导致心脏病发作和中风的案例不断增加[12,14]。另一方面，不恰当的家庭作业帮助不仅不能提高孩子的学习效率，还可能对他们的学习兴趣、自信心、亲子关系和长期心理健康产生负面影响。研究表明，孩子们在做家庭作业时可能会经历负面情绪，有时甚至会因为对自己、家长或老师感到极度沮丧而彻底停止当晚的学习[22]。反复的负面经历可能会使孩子对家庭作业失去兴趣，甚至导致过早的倦怠[5]。
+尽管家长普遍怀有改进意愿，但改善教育策略仍面临诸多挑战。父母们常常陷入"努力控制情绪却难以避免负面情绪爆发"的困境。Waters等[20]发现，父母压抑情绪并不能改善与孩子的互动，甚至可能产生相反的效果。传统的家庭教育改进方法包括咨询、阅读书籍、参加研讨会、上网课、加入支持小组以及与教育专家咨询等。像研讨会和支持小组这样的基于群体的方法虽然更实惠，但往往提供的是一般性的建议，难以契合每个家庭的独特需求。基于个体的方法，如一对一咨询，能提供具体建议，但通常费用较高，并且严重依赖于父母的主观自述。此外，这些传统方法主要服务于那些主动寻求帮助的父母，可能忽略了那些未意识到自己需要帮助的人群，中国传统乡镇仍存在着大量以不恰当方式辅导孩子，以及试图辅导孩子寻求帮助无果家长群体。
+不同于现有多数研究仅能模拟带有主观性和回忆偏差的教育专家咨询[7,10,17]，我们创新性地设想将智能教育专家融入家庭环境中，通过客观记录亲子互动，并利用大语言模型分析这些互动数据。我们旨在构建精准且定制化的家庭教育策略，既能真实反映家庭的实际动态与需求，又无需家长额外投入时间。本系统基于以下假设：1.从真实场景中获取客观且有价值的数据，有助于开发有效的教育策略，而不是依赖可能存在回忆偏差和信息不完整的主观描述。2.真实场景中的音频记录能够重构亲子互动过程。
