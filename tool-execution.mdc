@@ -1,0 +1,145 @@
+# 工具执行规则
+
+本规则解释项目中的工具调用和执行架构，包括工具定义、调用机制和执行流程。
+
+## 工具定义
+
+系统中的工具定义使用一致的JSON格式：
+
+```python
+# XEO应用工具定义示例
+xeo_tools = [
+    {
+        "name": "connect_device",  # 工具名称
+        "description": "连接或断开XEO应用中的设备",  # 工具描述
+        "parameters": {  # 工具参数
+            "device_id": {
+                "description": "当前页面能被控制的设备",
+                "type": "str",
+                "enum": ["xeo-about", "apple-tv", "playstation", "nintendo"]
+            }
+        }
+    },
+    {
+        "name": "adjust_setting",
+        "description": "调整XEO应用中的设置参数",
+        "parameters": {
+            "setting_id": {
+                "description": "当前页面能被控制的设置",
+                "type": "str", 
+                "enum": ["volume", "ipd", "magic", "seat", "ventilation"]
+            },
+            "value": {
+                "description": "设置的新值",
+                "type": "int"
+            }
+        }
+    }
+]
+```
+
+工具定义文件：[xeo-app/backend/mcp_tools.py](mdc:xeo-app/backend/mcp_tools.py)和[phi4_workflow/phi4_workflow_tools.py](mdc:phi4_workflow/phi4_workflow_tools.py)。
+
+## 工具调用机制
+
+工具调用涉及以下核心组件：
+
+1. **工具定义** - 描述工具名称、功能和参数
+2. **工具提示** - 在提示词中包含工具信息
+3. **意图推断** - 根据用户输入推断工具调用
+4. **工具调用解析** - 从模型输出解析工具调用
+5. **工具执行** - 执行解析的工具调用
+
+### 工具提示
+
+在[xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py)中，系统提示词添加工具信息：
+
+```python
+system_prompt = f'''{self.system_prompt_start}
+你是一个具备工具调用能力的XEO虚拟现实系统助手，可以控制设备连接和调整设置,你只需要返回工具调用的具体格式。
+
+可用函数：<|tool|>
+{tools_json}
+<|/tool|><|end|>
+
+函数调用规则:
+1. 所有函数调用应以以下格式生成：{self.tool_call_start}[{{"name": "函数名", "arguments": {{"参数"}}}}]{self.tool_call_end}
+2. 遵循提供的JSON架构，不要编造参数或值
+3. 确保选择正确匹配用户意图的函数
+{self.system_prompt_end}'''
+```
+
+### 工具调用解析
+
+工具调用解析在[xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py)的`parse_tool_calls`方法中实现：
+
+```python
+def parse_tool_calls(self, response_text):
+    """从响应文本中解析工具调用"""
+    tool_calls = []
+    
+    # 检查是否包含工具调用
+    tool_call_start = self.tool_call_start
+    tool_call_end = self.tool_call_end
+    
+    if tool_call_start in response_text and tool_call_end in response_text:
+        # 提取所有工具调用
+        start_idx = response_text.find(tool_call_start)
+        end_idx = response_text.find(tool_call_end, start_idx)
+        
+        while start_idx != -1 and end_idx != -1:
+            # 提取工具调用JSON字符串
+            tool_call_json_str = response_text[start_idx + len(tool_call_start):end_idx]
+            
+            try:
+                # 解析JSON
+                tool_call_data = json.loads(tool_call_json_str)
+                
+                # 处理单个工具调用和工具调用列表
+                if isinstance(tool_call_data, list):
+                    for call in tool_call_data:
+                        if "name" in call and "arguments" in call:
+                            tool_calls.append(call)
+                elif isinstance(tool_call_data, dict) and "name" in tool_call_data and "arguments" in tool_call_data:
+                    tool_calls.append(tool_call_data)
+            except json.JSONDecodeError as e:
+                logger.error(f"解析工具调用JSON时出错: {str(e)}")
+            
+            # 查找下一个工具调用
+            start_idx = response_text.find(tool_call_start, end_idx)
+            if start_idx != -1:
+                end_idx = response_text.find(tool_call_end, start_idx)
+            else:
+                break
+    
+    return tool_calls
+```
+
+## 工具执行流程
+
+工具执行流程：
+
+1. 前端捕获用户输入（图像、手势、眼动）
+2. 后端接收输入并传递给Phi4意图处理器
+3. 意图处理器推断用户意图并生成工具调用
+4. 工具调用解析器从模型输出提取工具调用信息
+5. 工具执行器验证参数并执行相应操作
+6. 执行结果通过WebSocket返回前端
+7. 前端更新UI反映操作结果
+
+### 工具执行组件
+
+系统中的主要工具执行组件：
+
+- [xeo-app/backend/mcp_executor.py](mdc:xeo-app/backend/mcp_executor.py) - 工具执行器，负责验证和执行工具调用
+- [xeo-app/backend/phi_intent.py](mdc:xeo-app/backend/phi_intent.py) - 意图处理器，集成Phi4模型和工具调用功能
+- [xeo-app/backend/app.py](mdc:xeo-app/backend/app.py) - 主应用入口，协调意图处理、工具执行和前端通信
+
+### 主要工具类别
+
+系统支持的主要工具类别：
+
+1. **设备控制工具** - 连接和控制各种设备
+2. **设置调整工具** - 修改系统和设备设置
+3. **导航工具** - 在应用中导航
+4. **内容控制工具** - 控制媒体播放和内容显示
